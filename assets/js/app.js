@@ -196,3 +196,4 @@ addButtons();
 // Last question's answer not matching
 // After last question, need to ask user to pick new movie
 // Leaderboard
+// Selecting a new movie after selecting an old movie does not start game
