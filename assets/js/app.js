@@ -2,8 +2,10 @@
 // numbers
 var count = 0;
 var randome = 0;
+var removeQuestionID = 0;
 // arrays
 var movies = [];
+var newMovies = [];
 var questions = [];
 // strings
 var newMovie = '';
@@ -17,11 +19,15 @@ var yourAnswer = '';
 var isAMovie = '';
 
 //Start with some movies
-movies = ["The Matrix", "The Big Lebowski", "Finding Nemo", "Pulp Fiction"];
-// movies = sessionStorage.getItem("movies");
+if(sessionStorage.getItem("movies") === null) {
+    movies = ["The Matrix", "The Big Lebowski", "Finding Nemo", "Pulp Fiction"];
+} else {
+    movies = JSON.parse(sessionStorage.getItem("movies"));
+}
 //Render movie buttons
 var addButtons = function() {
     $("#movie-buttons").empty();
+    console.log("I am empty inside");
     for (var i = 0; i < movies.length; i++) {
         var newButton = $("<button>");
         newButton.text(movies[i]);
@@ -39,10 +45,12 @@ var questions = [
     "What year did this film come out?",
     "What was this movie rated?"
 ];
+sessionStorage.setItem("questions", JSON.stringify(questions));
 
 //Add a movie
 $("#submit-movie").click(function(e) {
     e.preventDefault();
+    sessionStorage.clear();
     if(!$('#add-movies').val()) {
         alert("Add a movie");
     } else {
@@ -50,13 +58,23 @@ $("#submit-movie").click(function(e) {
         if (movies.indexOf($('#add-movies').val()) == -1) {
             newMovie = $("#add-movies").val().trim();
             movies.push(newMovie);
+            newMovies.push(newMovie);
             addButtons();
-            sessionStorage.setItem("movies", JSON.stringify(movies));
+            sessionStorage.setItem("movies",JSON.stringify(movies));
+            sessionStorage.setItem("newMovies",JSON.stringify(newMovies));
+            $("#add-movies").val("");
         } else {
             alert("Already Added.");
         }
     }
 });
+
+// Reset Movie List
+$('#movieReset').on("click", function() {
+    movies.splice(4, newMovies.length);
+    addButtons();
+    sessionStorage.clear();
+})
 
 // Choose Your Movie
 $(document).on("click",".movie", function() {
@@ -68,6 +86,10 @@ $(document).on("click",".movie", function() {
     selectedQuestion = questions[random];
     renderGame();
     checkMovie();
+    $(".movie").attr("disabled", true);
+    $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
+    $('#changeMovie').html("<button type='button' class='btn btn-primary' id='changeMovieBtn'>Change Movie</button>");
+    
 });
 // Start the Game
 $(document).on("click","#submitAnswer", function(e) {
@@ -77,6 +99,7 @@ $(document).on("click","#submitAnswer", function(e) {
         if(yourAnswer == director) {
             $("#answer").text("You're Right! " + movie + " is directed by: " + director);
             count++;
+            removeQuestion();
         } else {
             $("#answer").text("You're Wrong. Try again.");
         }
@@ -84,6 +107,7 @@ $(document).on("click","#submitAnswer", function(e) {
     if (random == 1) {
         if(yourAnswer == actor) {
             $("#answer").text("You're Right! " + movie + " stars " + actor);
+            removeQuestion();
             count++;
         } else {
             $("#answer").text("You're Wrong. Try again.");
@@ -92,6 +116,7 @@ $(document).on("click","#submitAnswer", function(e) {
     if (random == 2) {
         if(yourAnswer == year) {
             $("#answer").text("You're Right! " + movie + " came out in " + year);
+            removeQuestion();
             count++;                                
         } else {
             $("#answer").text("You're Wrong. Try again.");
@@ -99,6 +124,7 @@ $(document).on("click","#submitAnswer", function(e) {
     }
     if (random == 3) {
         if(yourAnswer == rating) {
+            removeQuestion();
             count++;
             $("#answer").text("You're Right! " + movie + " is rated: " + rating);
         } else {
@@ -106,11 +132,17 @@ $(document).on("click","#submitAnswer", function(e) {
         }
     }
     $("#score").text(count);
-    $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
-
+    $("#yourAnswer").val("");
 });
 $(document).on("click","#nextQuestionBtn", function() {
     renderGame();
+});
+$(document).on("click","#changeMovieBtn", function() {
+    $('.movie').attr("disabled", false);
+    // reset Questions list
+    questions = JSON.parse(sessionStorage.getItem("questions"));
+    $("#movieInfo").empty();
+
 });
 function checkMovie() {
     if(isAMovie == "False") {
@@ -144,9 +176,15 @@ function findMovieInfo() {
 }
 function renderGame() {
     $("#movieTitle").text(movie);
-    random = Math.floor(Math.random() * movies.length);
+    $("#questions").text("");
+    random = Math.floor(Math.random() * questions.length);
+    console.log(random);
     selectedQuestion = questions[random];
     $("#questions").text(selectedQuestion);
     $("#answersInput").html("<form><input type='text' id='yourAnswer' /><input type='submit' id='submitAnswer' type='button' class='btn btn-warning ml-1' value='Submit'></form>");
+}
+function removeQuestion() {
+    removeQuestionID = questions.indexOf(selectedQuestion);
+    questions.splice(removeQuestionID, 1);
 }
 addButtons();
