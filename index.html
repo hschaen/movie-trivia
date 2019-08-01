@@ -4,15 +4,24 @@
         <title>Movie Trivia</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="assets/css/agency.min.css">
     </head>
     <body>
         <div class="container">
             <div class="row">
                 <div class="col-sm-12">
-                    <div id="movie-buttons"></div>
+                    <div id="gameTitle">
+                        <h1>Harrison's Movie Trivia</h1>
+                    </div>
                 </div>
             </div>
             <div class="row">
+                <div class="col-sm-12">
+                    <div id="movie-buttons"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="row mt-3">
                 <div class="col-sm-12">
                     <form>
                         <label for="add-movies">Add a Movie</label>
@@ -21,6 +30,7 @@
                     </form>
                 </div>
             </div>
+            <hr>
             <div class="row">
                 <div class="col-sm-12">
                     <div id="movieInfo">
@@ -29,7 +39,7 @@
                         <div id="answersInput"></div>
                     </div>
                     <div id="answer"></div>
-                    <div id="score"></div>
+                    <div id="theScore">Your Score: <span id="score"></span></div>
                     <div id="nextQuestion"></div>
                 </div>
             </div>
@@ -39,150 +49,6 @@
             integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
             crossorigin="anonymous">
         </script>
-        <script type="text/javascript">
-            // declare our variables
-            // numbers
-            var count = 0;
-            // arrays
-            var movies = [];
-            var questions = [];
-            // strings
-            var newMovie = '';
-            var movie = '';
-            var selectedQuestion = '';
-            var director = '';
-            var actor = '';
-            var year = '';
-            var rating = '';
-            var yourAnswer = '';
-            var isAMovie = '';
-
-            //Start with some movies
-            movies = ["The Matrix", "The Big Lebowski", "Finding Nemo", "Pulp Fiction"];
-
-            //Render movie buttons
-            var addButtons = function() {
-                $("#movie-buttons").empty();
-                for (var i = 0; i < movies.length; i++) {
-                    var newButton = $("<button>");
-                    newButton.text(movies[i]);
-                    newButton.attr("data-name", movies[i]);
-                    newButton.attr("type", "button");
-                    newButton.addClass("movie btn btn-primary mr-1");
-                    $("#movie-buttons").append(newButton);
-                }
-            }
-
-            // Ask a question
-            var questions = [
-                "Who directed this movie?",
-                "Who was the lead actor?",
-                "What year did this film come out?",
-                "What was this movie rated?"
-            ];
-
-            //Add a movie
-            $("#submit-movie").on("click", function(e) {
-                e.preventDefault();
-                if(!$('#add-movies').val()) {
-                    alert("Add a movie");
-                } else {
-                    //if movie already exists in the array don't add it
-                    if (movies.indexOf($('#add-movies').val()) == -1) {
-                        newMovie = $("#add-movies").val().trim();
-                        movies.push(newMovie);
-                        addButtons();
-                    } else {
-                        alert("Already Added.");
-                    }
-                }
-            });
-            
-            // Choose Your Movie
-            $(document).on("click",".movie", function() {
-                movie = $(this).attr("data-name");
-                var random = Math.floor(Math.random() * movies.length);
-                selectedQuestion = questions[random];
-                console.log(random);
-                $("#movieTitle").text($(this).attr("data-name"));
-                $("#questions").text(selectedQuestion);
-                $("#answersInput").html("<form><input type='text' id='yourAnswer' /><input type='submit' id='submitAnswer' type='button' class='btn btn-warning' value='Submit'></form>");
-                
-                //Find Movie Info
-                var queryURL = "https://www.omdbapi.com/?t=" + movie + "&apikey=trilogy";
-                $.ajax({
-                    url: queryURL,
-                    method: "GET"
-                }).then(function(response) {
-                    console.log(response);
-
-                    // Check if this is a movie or not
-                    isAMovie = response.Response;
-                    checkMovie();
-                    // Store Movie Info
-                    director = response.Director;
-                    actor = response.Actors;
-                    year = response.Year;
-                    rating = response.Rated;
-
-                    // Start the Game
-                    $(document).on("click","#submitAnswer", function(e) {
-                        e.preventDefault();
-                        yourAnswer = $("#yourAnswer").val();
-                        if (random == 0) {
-                            if(yourAnswer == director) {
-                                $("#answer").text("You're Right!");
-                                count++;
-                            } else {
-                                $("#answer").text("You're Wrong.");
-                            }
-                        }
-                        if (random == 1) {
-                            if(yourAnswer == actor) {
-                                $("#answer").text("You're Right!");
-                                count++;
-                            } else {
-                                $("#answer").text("You're Wrong.");
-                            }
-                        }
-                        if (random == 2) {
-                            if(yourAnswer == year) {
-                                $("#answer").text("You're Right!");
-                                count++;                                
-                            } else {
-                                $("#answer").text("You're Wrong.");
-                            }
-                        }
-                        if (random == 3) {
-                            if(yourAnswer == rating) {
-                                count++;
-                                $("#answer").text("You're Right!");
-                            } else {
-                                $("#answer").text("You're Wrong.");
-                            }
-                        }
-                        $("#score").text(count);
-                        $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
-
-                    });
-                    $(document).on("click","#nextQuestionBtn", function() {
-
-                    });
-                });
-            });
-            function checkMovie() {
-                if(isAMovie == "False") {
-                    alert("This is not a movie");
-                    // remove button that is not a movie
-                    // find the button by title
-                    $("[data-name=" + movie + "]").remove();
-                    // remove movie question info
-                    $('#movieInfo').empty();
-                    // remove the button
-                    movies.splice($.inArray(movie, movies), 1);
-                }
-            }
-            addButtons();
-        </script>
+        <script type="text/javascript" src="assets/js/app.js"></script>
     </body>
 </html>
