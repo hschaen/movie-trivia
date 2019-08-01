@@ -33,7 +33,7 @@ var addButtons = function() {
         newButton.text(movies[i]);
         newButton.attr("data-name", movies[i]);
         newButton.attr("type", "button");
-        newButton.addClass("movie btn btn-primary mr-1");
+        newButton.addClass("movie btn btn-primary mr-1 mt-3");
         $("#movie-buttons").append(newButton);
     }
 }
@@ -63,6 +63,7 @@ $("#submit-movie").click(function(e) {
             sessionStorage.setItem("movies",JSON.stringify(movies));
             sessionStorage.setItem("newMovies",JSON.stringify(newMovies));
             $("#add-movies").val("");
+            $("#movieInfo, #answer").empty();
         } else {
             alert("Already Added.");
         }
@@ -188,3 +189,10 @@ function removeQuestion() {
     questions.splice(removeQuestionID, 1);
 }
 addButtons();
+
+//Issues
+// Reset button doesn't remove buttons
+// Non-movies not being removed or alerted
+// Last question's answer not matching
+// After last question, need to ask user to pick new movie
+// Leaderboard
