@@ -17,6 +17,9 @@ var year = '';
 var rating = '';
 var yourAnswer = '';
 var isAMovie = '';
+var queryURL;
+var apiKey;
+var giphyImage = "";
 
 //Start with some movies
 if(sessionStorage.getItem("movies") === null) {
@@ -63,7 +66,7 @@ $("#submit-movie").click(function(e) {
             sessionStorage.setItem("movies",JSON.stringify(movies));
             sessionStorage.setItem("newMovies",JSON.stringify(newMovies));
             $("#add-movies").val("");
-            $("#movieInfo, #answer").empty();
+           emptyMovieInfo();
         } else {
             alert("Already Added.");
         }
@@ -93,43 +96,43 @@ $(document).on("click",".movie", function() {
     
 });
 // Start the Game
+// When the game begins, Director is 0, Actor is 1, Year is 2, and Rated is 3. When Year is drawn and answered correct, Year is removed and Rated becomes number 2 in the array. This game needs logic to determine how many questions are left, and then assign a number to each question after each correct answer, and then assign the number to correct response. 
+
+// Conditional logic has to match the random number to the first slot in the array. It has to know which item is in that slot, so it knows yourAnswer will match with the right director, actor, year, or rated variables.
+
 $(document).on("click","#submitAnswer", function(e) {
     e.preventDefault();
     yourAnswer = $("#yourAnswer").val();
     if (random == 0) {
         if(yourAnswer == director) {
             $("#answer").text("You're Right! " + movie + " is directed by: " + director);
-            count++;
-            removeQuestion();
+            rightAnswer();
         } else {
-            $("#answer").text("You're Wrong. Try again.");
+            wrongAnswer();
         }
     }
     if (random == 1) {
-        if(yourAnswer == actor) {
+        if(yourAnswer == actor) { //if three answers have been answered correctly. there will not be a 3 array
             $("#answer").text("You're Right! " + movie + " stars " + actor);
-            removeQuestion();
-            count++;
+            rightAnswer();
         } else {
-            $("#answer").text("You're Wrong. Try again.");
+            wrongAnswer();
         }
     }
     if (random == 2) {
-        if(yourAnswer == year) {
+        if(yourAnswer == year) { //if two answers have been answered correctly, there will not be a 2 array
             $("#answer").text("You're Right! " + movie + " came out in " + year);
-            removeQuestion();
-            count++;                                
+            rightAnswer();                            
         } else {
-            $("#answer").text("You're Wrong. Try again.");
+            wrongAnswer();
         }
     }
-    if (random == 3) {
+    if (random == 3) { //if one answer has been answered correclty, there will not be a 3 array
         if(yourAnswer == rating) {
-            removeQuestion();
-            count++;
+            rightAnswer();
             $("#answer").text("You're Right! " + movie + " is rated: " + rating);
         } else {
-            $("#answer").text("You're Wrong. Try again.");
+            wrongAnswer();
         }
     }
     $("#score").text(count);
@@ -142,7 +145,7 @@ $(document).on("click","#changeMovieBtn", function() {
     $('.movie').attr("disabled", false);
     // reset Questions list
     questions = JSON.parse(sessionStorage.getItem("questions"));
-    $("#movieInfo").empty();
+    emptyMovieInfo();
 
 });
 function checkMovie() {
@@ -152,10 +155,13 @@ function checkMovie() {
         // find the button by title
         $("[data-name=" + movie + "]").remove();
         // remove movie question info
-        $('#movieInfo').empty();
+        emptyMovieInfo();
         // remove the button
         movies.splice($.inArray(movie, movies), 1);
     }
+}
+function emptyMovieInfo() {
+    $("#movieTitle, #questions, #answersInput").empty();
 }
 function findMovieInfo() {
     var queryURL = "https://www.omdbapi.com/?t=" + movie + "&apikey=trilogy";
@@ -178,6 +184,7 @@ function findMovieInfo() {
 function renderGame() {
     $("#movieTitle").text(movie);
     $("#questions").text("");
+    $("#yourAnswer").attr("disabled", false);
     random = Math.floor(Math.random() * questions.length);
     console.log(random);
     selectedQuestion = questions[random];
@@ -188,12 +195,37 @@ function removeQuestion() {
     removeQuestionID = questions.indexOf(selectedQuestion);
     questions.splice(removeQuestionID, 1);
 }
+function GiphyAPI() {
+    var giphyKey = "1CmJ9SOa5JjxE3R5S0TZxd9XDVWRMGSZ";
+    var queryURL = "https://api.giphy.com/v1/gifs/search?q=Pulp+Fiction&&limit=50&api_key=" + giphyKey;
+    $.ajax({
+        url: queryURL,
+        method: "GET"
+    }).then(function(response){
+        console.log(response);
+        random = Math.floor(Math.random() * response.data.length);
+        console.log(random);
+        giphyImage = response.data[random].images.fixed_height.url;
+        console.log(giphyImage);
+        $("#giphyImage img").attr("src",giphyImage);
+    });
+}
+function rightAnswer() {
+    $("#yourAnswer").attr("disabled", true);
+    GiphyAPI();
+    count++; //keep score
+    removeQuestion();
+}
+function wrongAnswer() {
+    $("#giphyImage img").attr("src", ""); // turn the image blank
+    $("#answer").text("You're Wrong. Try again."); // show wrong answer text
+
+}
 addButtons();
 
 //Issues
 // Reset button doesn't remove buttons
 // Non-movies not being removed or alerted
-// Last question's answer not matching
+// Question's answer not matching (incorrect response)
 // After last question, need to ask user to pick new movie
 // Leaderboard
-// Selecting a new movie after selecting an old movie does not start game
