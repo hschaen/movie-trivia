@@ -13,7 +13,7 @@
                 <div class="col-sm-12">
                     <div id="game-title">
                         <h1>Harrison's Movie Trivia</h1>
-                        <p>Choose a movie below or add your own movie to the list. Answer trivia questions about the movie to score points.</p>
+                        <p>Choose a movie below or add your own movie to the list. Answer trivia questions about the movie to score points. Score Overall Points when you clear an entire movie.</p>
                     </div>
                 </div>
             </div>
@@ -44,7 +44,7 @@
                         <div id="answersInput"></div>
                     </div>
                     <div id="answer"></div>
-                    <div id="theScore">Your Score: <span id="score"></span></div>
+                    <div id="theScore">Your Score: <span id="score">0</span>/4</div>
                 </div>
                 <div class="col-sm-6">
                     <div id="movieGif">
@@ -56,9 +56,14 @@
             </div>
             <hr>
             <div class="row">
-                <div class="col-sm-12">
+                <div class="col-sm-6">
                     <div id="nextQuestion" class="mr-3"></div>
                     <div id="changeMovie"></div>
+                </div>
+                <div class="col-sm-6">
+                    <div id="totalScore">
+                        <h3>Overall Score: <span id="totalScoreText">0</span></h3>
+                    </div>
                 </div>
             </div>
         </div>
