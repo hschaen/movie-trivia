@@ -1,12 +1,25 @@
+// =================== Table of Contents =========================== //
+
+// 0. Declarations
+// 1. Layout
+// 2. Game Logic
+// 3. Movie Logic
+// 4. Click Functions
+
+// =================== 0. Declarations =========================== //
 // declare our variables
 // numbers
 var count = 0;
-var randome = 0;
+var random = 0;
+var randomGif = 0;
 var removeQuestionID = 0;
+var answerItem = 0;
 // arrays
 var movies = [];
 var newMovies = [];
+var ques = [];
 var questions = [];
+var answerList = [];
 // strings
 var newMovie = '';
 var movie = '';
@@ -19,18 +32,18 @@ var yourAnswer = '';
 var isAMovie = '';
 var queryURL;
 var apiKey;
-var giphyImage = "";
+var giphyImage = '';
+// =================== 1. Layout =========================== //
 
 //Start with some movies
-if(sessionStorage.getItem("movies") === null) {
+if(sessionStorage.getItem("movies") === null) { //Check to see if there are any new movies added
     movies = ["The Matrix", "The Big Lebowski", "Finding Nemo", "Pulp Fiction"];
 } else {
-    movies = JSON.parse(sessionStorage.getItem("movies"));
+    movies = JSON.parse(sessionStorage.getItem("movies")); //show list of new movies if present
 }
 //Render movie buttons
 var addButtons = function() {
     $("#movie-buttons").empty();
-    console.log("I am empty inside");
     for (var i = 0; i < movies.length; i++) {
         var newButton = $("<button>");
         newButton.text(movies[i]);
@@ -40,20 +53,43 @@ var addButtons = function() {
         $("#movie-buttons").append(newButton);
     }
 }
-
+function renderGame() {
+    $("#movieTitle").text(movie);
+    $("#questions").text("");
+    $("#yourAnswer").attr("disabled", false);
+    randomNum(); // pick a random number
+    console.log("random: " + random);
+    selectedQuestion = questions[random]; // pick a random question from our list
+    $("#questions").text(selectedQuestion);
+    $("#answersInput").html("<form><input type='text' id='yourAnswer' /><input type='submit' id='submitAnswer' type='button' class='btn btn-warning ml-1' value='Submit'></form>");
+}
+function displayControls() {
+    $(".movie").attr("disabled", true);
+    $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
+    $('#changeMovie').html("<button type='button' class='btn btn-primary' id='changeMovieBtn'>Change Movie</button>");
+}
+function GiphyAPI() {
+    var giphyKey = "1CmJ9SOa5JjxE3R5S0TZxd9XDVWRMGSZ"; // change this key to your own
+    var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + movie + "&limit=50&api_key=" + giphyKey;
+    $.ajax({
+        url: queryURL,
+        method: "GET"
+    }).then(function(response){
+        randomGif = Math.floor(Math.random() * response.data.length); //pick a random Gif
+        giphyImage = response.data[randomGif].images.fixed_height.url; // get url of random gif
+        $("#giphyImage img").attr("src",giphyImage); //set url to img src
+    });
+}
+// =================== 2. Game Logic =========================== //
 // Ask a question
 var questions = [
-    "Who directed this movie?",
-    "Who was the lead actor?",
-    "What year did this film come out?",
-    "What was this movie rated?"
+    "Who directed this movie?", // position 0
+    "Who was the lead actor?", // position 1
+    "What year did this film come out?", // position 2
+    "What was this movie rated?" // position 3
 ];
-sessionStorage.setItem("questions", JSON.stringify(questions));
-
-//Add a movie
-$("#submit-movie").click(function(e) {
-    e.preventDefault();
-    sessionStorage.clear();
+sessionStorage.setItem("questions", JSON.stringify(questions)); //store list of questions
+function alreadyAdded() {
     if(!$('#add-movies').val()) {
         alert("Add a movie");
     } else {
@@ -70,84 +106,73 @@ $("#submit-movie").click(function(e) {
         } else {
             alert("Already Added.");
         }
-    }
-});
-
-// Reset Movie List
-$('#movieReset').on("click", function() {
-    movies.splice(4, newMovies.length);
-    addButtons();
-    sessionStorage.clear();
-})
-
-// Choose Your Movie
-$(document).on("click",".movie", function() {
-    movie = $(this).attr("data-name");
-    
-    //Find Movie Info
-    findMovieInfo();
-    random = Math.floor(Math.random() * movies.length);
-    selectedQuestion = questions[random];
-    renderGame();
-    checkMovie();
-    $(".movie").attr("disabled", true);
-    $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
-    $('#changeMovie').html("<button type='button' class='btn btn-primary' id='changeMovieBtn'>Change Movie</button>");
-    
-});
-// Start the Game
-// When the game begins, Director is 0, Actor is 1, Year is 2, and Rated is 3. When Year is drawn and answered correct, Year is removed and Rated becomes number 2 in the array. This game needs logic to determine how many questions are left, and then assign a number to each question after each correct answer, and then assign the number to correct response. 
-
-// Conditional logic has to match the random number to the first slot in the array. It has to know which item is in that slot, so it knows yourAnswer will match with the right director, actor, year, or rated variables.
-
-$(document).on("click","#submitAnswer", function(e) {
-    e.preventDefault();
+    } 
+}
+function startGame() {
     yourAnswer = $("#yourAnswer").val();
-    if (random == 0) {
-        if(yourAnswer == director) {
+    answerItem = questions.indexOf(selectedQuestion); 
+    if (answerList[answerItem] == "director") {
+        if(yourAnswer.toLowerCase() == director) {
             $("#answer").text("You're Right! " + movie + " is directed by: " + director);
             rightAnswer();
         } else {
             wrongAnswer();
         }
     }
-    if (random == 1) {
-        if(yourAnswer == actor) { //if three answers have been answered correctly. there will not be a 3 array
+    if (answerList[answerItem] == "actor") {
+        if(yourAnswer.toLowerCase() == actor) {
             $("#answer").text("You're Right! " + movie + " stars " + actor);
             rightAnswer();
         } else {
             wrongAnswer();
         }
     }
-    if (random == 2) {
-        if(yourAnswer == year) { //if two answers have been answered correctly, there will not be a 2 array
+    if (answerList[answerItem] == "year") {
+        if(yourAnswer.toLowerCase() == year) {        
             $("#answer").text("You're Right! " + movie + " came out in " + year);
             rightAnswer();                            
         } else {
             wrongAnswer();
         }
     }
-    if (random == 3) { //if one answer has been answered correclty, there will not be a 3 array
-        if(yourAnswer == rating) {
+    if (answerList[answerItem] == "rating") {
+        if(yourAnswer.toLowerCase() == rating) {
             rightAnswer();
-            $("#answer").text("You're Right! " + movie + " is rated: " + rating);
+            $("#answer").text("You're Right! " + movie + " is rated: " + rating.toUpperCase());
         } else {
             wrongAnswer();
         }
     }
     $("#score").text(count);
     $("#yourAnswer").val("");
-});
-$(document).on("click","#nextQuestionBtn", function() {
-    renderGame();
-});
-$(document).on("click","#changeMovieBtn", function() {
-    $('.movie').attr("disabled", false);
-    // reset Questions list
-    questions = JSON.parse(sessionStorage.getItem("questions"));
-    emptyMovieInfo();
+}
+function removeQuestion() {
+    removeQuestionID = questions.indexOf(selectedQuestion);
+    questions.splice(removeQuestionID, 1);
+    answerList.splice(removeQuestionID, 1);
+}
 
-});
+function rightAnswer() {
+    $("#yourAnswer").attr("disabled", true);
+    GiphyAPI();
+    count++; //keep score
+    setTimeout(removeQuestion, 1000);
+}
+function wrongAnswer() {
+    $("#giphyImage img").attr("src", ""); // turn the image blank
+    $("#answer").text("You're Wrong. Try again."); // show wrong answer text
+
+}
+function storeQuestions() {
+        for (var m = 0; m < questions.length; m++) {
+        ques[m] = questions[m];
+    }
+}
+function randomNum() {
+    random = Math.floor(Math.random() * answerList.length);
+}
+// =================== 3. Movie Logic =========================== //
+
 function checkMovie() {
     if(isAMovie == "False") {
         alert("This is not a movie");
@@ -175,52 +200,61 @@ function findMovieInfo() {
         isAMovie = response.Response;
 
         // Store Movie Info
-        director = response.Director;
-        actor = response.Actors;
-        year = response.Year;
-        rating = response.Rated;
+        director = response.Director.toLowerCase();
+        actor = response.Actors.toLowerCase();
+        year = response.Year.toLowerCase();
+        rating = response.Rated.toLowerCase();
+        answerList.push("director","actor","year","rating");
     });
 }
-function renderGame() {
-    $("#movieTitle").text(movie);
-    $("#questions").text("");
-    $("#yourAnswer").attr("disabled", false);
-    random = Math.floor(Math.random() * questions.length);
-    console.log(random);
-    selectedQuestion = questions[random];
-    $("#questions").text(selectedQuestion);
-    $("#answersInput").html("<form><input type='text' id='yourAnswer' /><input type='submit' id='submitAnswer' type='button' class='btn btn-warning ml-1' value='Submit'></form>");
-}
-function removeQuestion() {
-    removeQuestionID = questions.indexOf(selectedQuestion);
-    questions.splice(removeQuestionID, 1);
-}
-function GiphyAPI() {
-    var giphyKey = "1CmJ9SOa5JjxE3R5S0TZxd9XDVWRMGSZ";
-    var queryURL = "https://api.giphy.com/v1/gifs/search?q=Pulp+Fiction&&limit=50&api_key=" + giphyKey;
-    $.ajax({
-        url: queryURL,
-        method: "GET"
-    }).then(function(response){
-        console.log(response);
-        random = Math.floor(Math.random() * response.data.length);
-        console.log(random);
-        giphyImage = response.data[random].images.fixed_height.url;
-        console.log(giphyImage);
-        $("#giphyImage img").attr("src",giphyImage);
-    });
-}
-function rightAnswer() {
-    $("#yourAnswer").attr("disabled", true);
-    GiphyAPI();
-    count++; //keep score
-    removeQuestion();
-}
-function wrongAnswer() {
-    $("#giphyImage img").attr("src", ""); // turn the image blank
-    $("#answer").text("You're Wrong. Try again."); // show wrong answer text
+// =================== 4. Click Functions =========================== //
 
-}
+//Add a movie
+$("#submit-movie").click(function(e) {
+    e.preventDefault();
+    sessionStorage.clear();
+    alreadyAdded();
+});
+
+// Reset Movie List
+$('#movieReset').on("click", function() {
+    movies.splice(4, newMovies.length);
+    addButtons();
+    sessionStorage.clear();
+})
+
+// Choose Your Movie
+$(document).on("click",".movie", function() {
+    movie = $(this).attr("data-name");
+    
+    //Find Movie Info
+    findMovieInfo();
+    renderGame();
+    checkMovie();
+    displayControls();
+    
+});
+// Start the Game
+$(document).on("click","#submitAnswer", function(e) {
+    e.preventDefault();
+    startGame();
+});
+
+// Change the Selected Question
+$(document).on("click","#nextQuestionBtn", function() {
+    renderGame();
+});
+
+// Change the Selected Movie
+$(document).on("click","#changeMovieBtn", function() {
+    $('.movie').attr("disabled", false);
+    // reset Questions list
+    questions = JSON.parse(sessionStorage.getItem("questions"));
+    emptyMovieInfo();
+
+});
+
+storeQuestions();
 addButtons();
 
 //Issues
@@ -229,3 +263,4 @@ addButtons();
 // Question's answer not matching (incorrect response)
 // After last question, need to ask user to pick new movie
 // Leaderboard
+// Store questions correct per movie. Each movie you should have a max score of 4.
