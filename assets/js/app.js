@@ -58,6 +58,7 @@ var addButtons = function() {
         $("#movie-buttons").append(newButton);
     }
 }
+// Display the Game Text
 function renderGame() {
     $("#movieTitle").text(movie);
     $("#questions").text("");
@@ -69,11 +70,13 @@ function renderGame() {
     $("#questions").text(selectedQuestion);
     $("#answersInput").html("<form><input type='text' id='yourAnswer' /><input type='submit' id='submitAnswer' type='button' class='btn btn-warning ml-1' value='Submit'></form>");
 }
+// Display Buttons Below Game
 function displayControls() {
     $(".movie").attr("disabled", true);
     $('#nextQuestion').html("<button type='button' class='btn btn-primary' id='nextQuestionBtn'>Next Question</button>");
     $('#changeMovie').html("<button type='button' class='btn btn-primary' id='changeMovieBtn'>Change Movie</button>");
 }
+// Display Gifs
 function GiphyAPI() {
     var giphyKey = "1CmJ9SOa5JjxE3R5S0TZxd9XDVWRMGSZ"; // change this key to your own
     var queryURL = "https://api.giphy.com/v1/gifs/search?q=" + movie + "&limit=50&api_key=" + giphyKey;
@@ -96,12 +99,15 @@ function reseedQuestions() {
         "What was this movie rated?" // position 3
     ];
 }
+//Store Questions in the Session
 sessionStorage.setItem("questions", JSON.stringify(questions)); //store list of questions
+
+// Check to see if questions are already added
 function alreadyAdded() {
     if(!$('#add-movies').val()) {
         alert("Add a movie");
     } else {
-        //if movie already exists in the array don't add it
+        // Check to see if the movie is in the array, and if not, add it.
         if (movies.indexOf($('#add-movies').val()) == -1) {
             newMovie = $("#add-movies").val().trim();
             movies.push(newMovie);
@@ -112,19 +118,23 @@ function alreadyAdded() {
             $("#add-movies").val("");
            emptyMovieInfo();
         } else {
+            //if movie already exists in the array don't add it
             alert("Already Added.");
         }
     } 
 }
+// generate a random number between 0 and the length of the number of possible answers
 function randomNum() {
     random = Math.floor(Math.random() * answerList.length);
 }
+// remove the question from the questions array, and corresponding answer
 function removeQuestion() {
     removeQuestionID = questions.indexOf(selectedQuestion);
     questions.splice(removeQuestionID, 1);
     answerList.splice(removeQuestionID, 1);
 }
 
+// if correct answer: show gif, increase score, remove the question, check score
 function rightAnswer() {
     $("#yourAnswer").attr("disabled", true);
     GiphyAPI();
@@ -134,6 +144,7 @@ function rightAnswer() {
     setTimeout(removeQuestion, 1000);
     checkMovieScore();
 }
+// check answers to see if they are correct or not
 function startGame() {
     yourAnswer = $("#yourAnswer").val();
     answerItem = questions.indexOf(selectedQuestion); 
@@ -198,7 +209,7 @@ function checkMovie() {
     
 }
 function checkMovieScore() {
-    if (movieScore.score == 4) {
+    if (movieScore.score / 4 === 1) {
         $("#nextQuestionBtn").attr("disabled", true);
         $("[data-name='" + movie + "']").remove();
         movies.splice($.inArray(movie, movies), 1);
